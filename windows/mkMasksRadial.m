@@ -55,6 +55,9 @@ thetaWidth = (2*pi)/nThetas - thetaTWidth;
 % define angle centers and width
 thetaCenters = (0:nThetas-1)*(thetaWidth+thetaTWidth)-thetaWidth/2;
 
+% print n pooling regions:
+fprintf('Created %d radial and %d angular pooling regions\n', nRs, nThetas);
+
 %ratio =
 %(2.^(rCenters+rWidth/2)-2.^(rCenters-rWidth/2))./((2*pi*2.^rCenters)/nThetas)s
 
