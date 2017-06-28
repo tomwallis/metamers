@@ -23,15 +23,16 @@ clrs = bsxfun(@times,ones(nMasks,3),vals);
 
 im = zeros(opts.szy,opts.szx,3);
 for imask = 1:nMasks
-	tmp = squeeze(m.scale{1}.maskMat(imask,:,:));
-	tmp2 = zeros(size(tmp));
-	tmp2(tmp>0.75) = 1;
+    % masks run from middle to outer, then CCW, starting from bottom left.
+	tmp = squeeze(m.scale{1}.maskMat(imask,:,:));  % the smooth-valued cosine pooling region.
+	tmp2 = zeros(size(tmp)); 
+	tmp2(tmp>0.75) = 1;  % thresholded for plotting.
 	r = tmp2*clrs(imask,1);
 	g = tmp2*clrs(imask,2);
 	b = tmp2*clrs(imask,3);
 	im(:,:,1) = im(:,:,1) + r;
 	im(:,:,2) = im(:,:,2) + g;
-	im(:,:,3) = im(:,:,3) + b;
+	im(:,:,3) = im(:,:,3) + b;  % iteratively adding thresholded images for plotting.
 end
 im = clip(im,0,1);
 
