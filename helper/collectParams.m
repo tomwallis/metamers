@@ -11,7 +11,8 @@ function [out inds] = collectParams(params,opts)
 % params: structure with model parameters
 % opts: structure containing options
 %
-% out: matrix of parameters
+% out: matrix of parameters. 
+% rows = parameter group, cols = mask
 % inds: structure of parameter indices
 %
 % freeman, created 1/1/2009
