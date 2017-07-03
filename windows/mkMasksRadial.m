@@ -1,4 +1,4 @@
-function [mask sz] = mkMasksRadial(imSize,windows,verbose)
+function [mask, sz, ind] = mkMasksRadial(imSize,windows,verbose)
 
 %
 %-----------------------------------------
@@ -13,6 +13,7 @@ function [mask sz] = mkMasksRadial(imSize,windows,verbose)
 %
 % masks: matrix of window functions
 % sz: vector of window sizes
+% ind: indices to radial / angular pooling region for each mask.
 %
 % freeman, 12/25/2008
 %-----------------------------------------
@@ -80,6 +81,9 @@ for itheta=1:nThetas
 		if ~isequal(testMat,zeros(size(thetaMask)))
 			mask(imask,:,:) = testMat;
 			sz(imask) = (2^(rCenters(ir)+rWidth+rTWidth) - 2^(rCenters(ir)-rWidth-rTWidth));
+            % store radial and angular pooling regions:
+            ind(imask, 1) = itheta; 
+            ind(imask, 2) = ir;
 			imask = imask + 1;
 		end
 	end

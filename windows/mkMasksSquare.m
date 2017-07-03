@@ -1,4 +1,4 @@
-function mask = mkMasksSquare(imSize,windows,verbose)
+function [mask, tmp, ind] = mkMasksSquare(imSize,windows,verbose)
 
 %-----------------------------------------
 % mkMasksSquare(imSize,windows)
@@ -49,7 +49,11 @@ for ix=1:nX
     end
     yMask = interp1(xYwin,yYwin,rY);
     mask(imask,:,:) = xMask.*yMask;
+    ind(imask, 1) = ix;
+    ind(imask, 2) = iy;
     imask = imask + 1;
   end
   if verbose; T = textWaitbar(T,ix/nX); end
 end
+
+tmp = [];  % just to make output length compatible with mkMasksRadial.

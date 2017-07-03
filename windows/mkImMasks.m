@@ -31,11 +31,11 @@ switch opts.windows.windowType
 case 'radial'
     thisSz = scales(1,:);
     m.scale{1}.size = [thisSz(2), thisSz(1)];
-    m.scale{1}.maskMat = mkMasksRadial(thisSz,opts.windows,opts.verbose);
+    [m.scale{1}.maskMat, ~, m.maskInds] = mkMasksRadial(thisSz,opts.windows,opts.verbose);
 case 'square'
     thisSz = scales(1,:);
     m.scale{1}.size = [thisSz(2), thisSz(1)];
-    m.scale{1}.maskMat = mkMasksSquare(thisSz,opts.windows,opts.verbose);
+    [m.scale{1}.maskMat, ~, m.maskInds] = mkMasksSquare(thisSz,opts.windows,opts.verbose);
 end
 m.scale{1}.nMasks = size(m.scale{1}.maskMat,1);
 
