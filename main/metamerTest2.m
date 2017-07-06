@@ -22,5 +22,14 @@ params = metamerAnalysis(oim,m,opts);
 % do metamer analysis with repositioned order of computation:
 params2 = metamerAnalysis2(oim, m, opts); 
 
+% check that params are the same:
+[out, inds] = collectParams(params, opts);
+[out2, inds] = collectParams(params2, opts);
+
+all(all(out == out2))
+
+%%% --> changing the starting angle doesn't affect the params. Can't be a
+%%% problem at the analysis stage.
+
 % % do metamer synthesis (generate new image matched for statistics)
-% res = metamerSynthesis(params,size(oim),m,opts);
+% res = metamerSynthesis2(params,size(oim),m,opts);
