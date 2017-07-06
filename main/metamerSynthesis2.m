@@ -204,7 +204,30 @@ for niter=1:opts.nIters
     
     im = im.*W.full{Nsc+1} + oim.scale{Nsc+1}.*(1-W.full{Nsc+1});
     
-    % adjust mean and variance of lowband for each mask
+    %% create a random order for looping over the masks
+    
+    % Check that all scales have the same number of masks (this
+    % is the case for Jeremy's default). Otherwise this code would need to
+    % be more complicated.
+    if ~all(nW == nW(1))
+        error('Not all scales have the same number of masks')
+    end
+    
+    % create a random index order for masks. Start from a random angular
+    % pooling region (innermost radius) on each iteration of the synthesis.
+    n_theta = length(unique(m.maskInds(:, 1)));
+    % on this iteration, pick a random theta to start from:
+    start_theta = randi(n_theta, 1);
+    % convert to 1 : nW indices:
+    start_ind = find(m.maskInds(:, 1) == start_theta & ...
+        m.maskInds(:, 2) == 1);
+    rand_ind = [(start_ind : nW(1)), (1 : start_ind -1)];
+
+    % now replace all loops of iw = 1 : nW(scale) by 
+%         for tmp_ind = 1 : nW(Nsc+1)
+%         iw = rand_ind(tmp_ind);
+    
+    %% adjust mean and variance of lowband for each mask
     clear meanSNR
     clear varSNR
     clear skewSNR
@@ -213,7 +236,12 @@ for niter=1:opts.nIters
     clear targetMeans
     clear targetVars
     im = vector(im);
-    for iw=1:nW(Nsc+1)
+    % Note, because this is just filling an array and not actually
+    % adjusting the image, it shouldn't matter what order it's done in. The
+    % critical loop is lower. Still, I'm just doing this for consistency.
+%     for iw=1:nW(Nsc+1)    
+    for tmp_ind = 1 : nW(Nsc+1)
+        iw = rand_ind(tmp_ind);
         thisNa = W.Na{Nsc+1}(iw);
         le = floor((thisNa-1)/2);
         targetVars(iw) = acr0.scale{Nsc+1}.mask{iw}(le+1:le+1,le+1:le+1);
@@ -236,7 +264,9 @@ for niter=1:opts.nIters
         im = wmodmean2(im,targetMeans,W.scale{Nsc+1},preCalcInv);
         
         if opts.debugging
-            for iw=1:nW(Nsc+1)
+%             for iw=1:nW(Nsc+1)            
+            for tmp_ind = 1 : nW(Nsc+1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{Nsc+1}(:,iw);
                 wSq = W.scaleSq{Nsc+1}(:,:,iw);
                 wSqrt = W.scaleSqrt{Nsc+1}(:,:,iw);
@@ -265,7 +295,9 @@ for niter=1:opts.nIters
         im = wmodskew2(im,targetSkew(goodinds),Wtmp,Wsumtmp,1,epPixSkew(Nsc+1),Nsc+1);
         im = wmodmean2(im,targetMeans,W.scale{Nsc+1},preCalcInv);
         if opts.debugging
-            for iw=1:nW(Nsc+1)
+%             for iw=1:nW(Nsc+1)
+            for tmp_ind = 1 : nW(Nsc+1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{Nsc+1}(:,iw);
                 skewSNR(iw,niterw) = (targetSkew(iw)-wskew2(im,w))^2;
             end
@@ -278,7 +310,9 @@ for niter=1:opts.nIters
         im = wmodkurt2(im,targetKurt(goodinds),Wtmp,Wsumtmp,1,epPixKurt(Nsc+1),Nsc+1);
         im = wmodmean2(im,targetMeans,W.scale{Nsc+1},preCalcInv);
         if opts.debugging
-            for iw=1:nW(Nsc+1)
+%             for iw=1:nW(Nsc+1)
+            for tmp_ind = 1 : nW(Nsc+1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{Nsc+1}(:,iw);
                 kurtSNR(iw,niterw) = (targetKurt(iw)-wkurt2(im,w))^2;
             end
@@ -326,20 +360,9 @@ for niter=1:opts.nIters
         nc = size(cousins,2); np = size(parents,2);
         cousinsnew = zeros(size(cousins));
         
-        % Here is the loop over radial / angular scales. Original
-        % metamerSynthesis.m went iw = 1:nW(nsc), i.e. from "west" angle in
-        % clockwise direction. This lead to wedge artifact. Now start from
-        % a random angular pooling region on each iteration of the
-        % synthesis.
-        
-        n_theta = length(unique(m.maskInds(:, 1)));
-        % on this iteration, pick a random theta to start from:
-        start_theta = randi(n_theta, 1);
-        % convert to 1 : nW indices:
-        start_ind = find(m.maskInds(:, 1) == start_theta & ...
-            m.maskInds(:, 2) == 1);
-        rand_ind = [(start_ind : nW(nsc)), (1 : start_ind -1)];
-        
+        % This is the main area we think might cause the wedge artifact. 
+        % Now start from a random angular pooling region on each iteration.
+%             for iw=1:nW(nsc)        
         for tmp_ind = 1 : nW(nsc)
             iw = rand_ind(tmp_ind);
             w = W.scale{nsc}(:,iw);
@@ -420,6 +443,7 @@ for niter=1:opts.nIters
                 ch = wmodmean2(ch,targetMeans,W.scale{nsc},preCalcInv);
                 
                 if opts.debugging
+                    %             for iw=1:nW(nsc)
                     for tmp_ind = 1 : nW(nsc)
                         iw = rand_ind(tmp_ind);
                         w = W.scale{nsc}(:,iw);
@@ -468,6 +492,7 @@ for niter=1:opts.nIters
             goodinds = find((W.sum{nsc}/numel(im))>0.001);
             
             cousinsnew = zeros(size(cousins));
+            %             for iw=1:nW(nsc)
             for tmp_ind = 1 : nW(nsc)
                 iw = rand_ind(tmp_ind);
                
@@ -551,6 +576,7 @@ for niter=1:opts.nIters
         
         im = vector(im);
         
+%             for iw=1:nW(nsc)        
         for tmp_ind = 1 : nW(nsc)
             iw = rand_ind(tmp_ind);
             thisNa = W.Na{nsc}(iw);
@@ -574,6 +600,7 @@ for niter=1:opts.nIters
             im = wmodmean2(im,targetMeans,W.scale{nsc},preCalcInv);
             
             if opts.debugging
+                %             for iw=1:nW(nsc)
                 for tmp_ind = 1 : nW(nsc)
                     iw = rand_ind(tmp_ind);
                     w = W.scale{nsc}(:,iw);
@@ -607,6 +634,7 @@ for niter=1:opts.nIters
                 [im skip] = wmodskew2(im,targetSkew,W.scale{nsc},W.sum{nsc},1,epPixSkew(nsc),nsc);
                 im = wmodmean2(im,targetMeans,W.scale{nsc},preCalcInv);
                 if opts.debugging
+                    %             for iw=1:nW(nsc)
                     for tmp_ind = 1 : nW(nsc)
                         iw = rand_ind(tmp_ind);
                         w = W.scale{nsc}(:,iw);
@@ -621,6 +649,7 @@ for niter=1:opts.nIters
                 [im skip] = wmodkurt2(im,targetKurt,W.scale{nsc},W.sum{nsc},1,epPixKurt(nsc),nsc);
                 im = wmodmean2(im,targetMeans,W.scale{nsc},preCalcInv);
                 if opts.debugging
+                    %             for iw=1:nW(nsc)
                     for tmp_ind = 1 : nW(nsc)
                         iw = rand_ind(tmp_ind);
                         w = W.scale{nsc}(:,iw);
@@ -646,6 +675,7 @@ for niter=1:opts.nIters
     ind = pyrBandIndices(pind,1);
     ch = vector(pyr(ind));
     ch = ch * sqrt(var2(oim.HPR)/var2(ch));
+    %             for iw=1:nW(nsc)
     for tmp_ind = 1 : nW(nsc)
         iw = rand_ind(tmp_ind);
         thisNa = W.Na{nsc}(iw);
@@ -658,7 +688,9 @@ for niter=1:opts.nIters
         ch = wmodacorr2(ch,targetAcorr,W.scaleSq{1},W.scaleSqrt{1},epResVar(1),1,W.Na{1},W.ind{1},W.sz{1},W.scale{1});
         ch = wmodmean2(ch,targetMHPR,W.scale{1},preCalcInv);
         if opts.debugging
-            for iw=1:nW(1)
+%             for iw=1:nW(1)
+            for tmp_ind = 1 : nW(1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{1}(:,iw);
                 wSq = W.scaleSq{1}(:,:,iw);
                 wSqrt = W.scaleSqrt{1}(:,:,iw);
@@ -705,7 +737,9 @@ for niter=1:opts.nIters
         im = wmodmean2(im,targetMeans,W.scale{1},preCalcInv);
         
         if opts.debugging
-            for iw=1:nW(1)
+%             for iw=1:nW(1)
+            for tmp_ind = 1 : nW(1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{1}(:,iw);
                 meanSNR(iw,niterw) = (wmean2(im,w) - targetMeans(iw))^2;
                 varSNR(iw,niterw) = (targetVars(iw) - wvar2(im,w))^2;
@@ -725,7 +759,9 @@ for niter=1:opts.nIters
         [im skip] = wmodskew2(im,targetSkew,W.scale{1},W.sum{nsc},1,epPixSkew(nsc),1);
         im = wmodmean2(im,targetMeans,W.scale{1},preCalcInv);
         if opts.debugging
-            for iw=1:nW(1)
+%             for iw=1:nW(1)
+            for tmp_ind = 1 : nW(1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{1}(:,iw);
                 skewSNR(iw,niterw) = (targetSkew(iw) - wskew2(im,w))^2;
             end
@@ -740,7 +776,9 @@ for niter=1:opts.nIters
         [im skip] = wmodkurt2(im,targetKurt,W.scale{1},W.sum{nsc},1,epPixKurt(nsc),1);
         im = wmodmean2(im,targetMeans,W.scale{1},preCalcInv);
         if opts.debugging
-            for iw=1:nW(1)
+%             for iw=1:nW(1)
+            for tmp_ind = 1 : nW(1)
+                iw = rand_ind(tmp_ind);
                 w = W.scale{1}(:,iw);
                 kurtSNR(iw,niterw) = (targetKurt(iw) - wkurt2(im,w))^2;
             end
