@@ -49,13 +49,15 @@ statg0 = zeros(6,m.scale{1}.nMasks);
 
 % create a random index order for masks. Start from a random angular
 % pooling region (innermost radius) on each iteration of the synthesis.
-n_theta = length(unique(m.maskInds(:, 1)));
+% n_theta = length(unique(m.maskInds(:, 1)));
 % on this iteration, pick a random theta to start from:
-start_theta = 5; %randi(n_theta, 1);
-% convert to 1 : nW indices:
-start_ind = find(m.maskInds(:, 1) == start_theta & ...
-    m.maskInds(:, 2) == 1);
-rand_ind = [(start_ind : nW(1)), (1 : start_ind -1)];
+% start_theta = 5; %randi(n_theta, 1);
+% % convert to 1 : nW indices:
+% start_ind = find(m.maskInds(:, 1) == start_theta & ...
+%     m.maskInds(:, 2) == 1);
+% rand_ind = [(start_ind : nW(1)), (1 : start_ind -1)];
+
+rand_ind = randperm(nW(1));
 
 % now replace all loops of iw = 1 : nW(scale) by
 %         for tmp_ind = 1 : nW(Nsc+1)
