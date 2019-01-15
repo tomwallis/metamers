@@ -23,23 +23,12 @@ function [ norm_mse, prop_error, loss ] = metamerLoss(params_a, params_b, opts)
 % Tom Wallis & Alex Ecker, 12/06/2017
 %-----------------------------------------
 
-a = unpack_params(params_a, opts);
-b = unpack_params(params_b, opts);
+% using collectParams (all parameters returned as matrix):
+a = collectParams(params_a, opts);
+b = collectParams(params_b, opts);
 
-% compute loss as "mean squared error normalised by parameter variance":
 loss = (a - b);
-norm_mse = mean(loss .^ 2) ./ var(a);
-prop_error = sqrt(mean(loss .^ 2) ./ mean(a.^2));
+norm_mse = mean(loss(:) .^ 2) ./ var(a(:));
+prop_error = sqrt(mean(loss(:) .^ 2) ./ mean (a(:) .^ 2));
 
-    function v = unpack_params(params, opts)
-       [out, inds] = collectParams(params, opts);
-       v = [];
-       field_names = fieldnames(inds);
-       for i = 1 : length(fieldnames(inds))
-          ind = inds.(field_names{i});
-          tmp = out(ind, :);
-          tmp = tmp(:);
-          v = [v; tmp];
-       end
-    end
 end
